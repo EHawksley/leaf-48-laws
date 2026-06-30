@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Leaf — One Law a Weekday</title>
+<link rel="apple-touch-fullscreen" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Leaf">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --desk:#14161d;--desk-2:#1b1e27;--paper:#f6f2e9;--ink:#1d1c19;
+    --ink-soft:#6b6657;--amber:#b8762e;--amber-deep:#9a5f1f;--line:#e3ddcf;--danger:#a23b34;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(120% 80% at 50% -10%, #1f2330 0%, var(--desk) 60%);
+    color:var(--paper);font-family:"Spline Sans",system-ui,sans-serif;
+    min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) 16px calc(env(safe-area-inset-bottom) + 84px);
+  }
+  .masthead{text-align:center;padding:24px 0 4px;letter-spacing:.34em;text-transform:uppercase;font-size:11px;color:#8e8a7e;font-weight:500}
+  .masthead b{color:var(--amber);font-weight:600;letter-spacing:.34em}
+  .subhead{text-align:center;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#5d5a52;padding-bottom:14px}
+
+  .stage{flex:1;display:flex;align-items:center;justify-content:center}
+
+  .page{
+    position:relative;width:100%;max-width:440px;background:var(--paper);color:var(--ink);
+    border-radius:4px 4px 14px 14px;padding:30px 26px 32px;
+    box-shadow:0 22px 50px -18px rgba(0,0,0,.65), 0 2px 0 rgba(255,255,255,.04);
+    animation:rise .6s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .page::before{
+    content:"";position:absolute;left:0;right:0;top:-8px;height:9px;
+    background:radial-gradient(circle at 6px 9px, transparent 4px, var(--paper) 4.5px) 0 0/12px 9px repeat-x;
+    filter:drop-shadow(0 -1px 0 rgba(0,0,0,.18));
+  }
+  .datecard{text-align:center;border-bottom:1px solid var(--line);padding-bottom:15px;margin-bottom:20px}
+  .weekday{font-family:"Spline Sans";letter-spacing:.36em;text-transform:uppercase;font-size:11px;color:var(--amber-deep);font-weight:600}
+  .daynum{font-family:"Fraunces";font-weight:500;font-size:58px;line-height:.95;margin:4px 0 2px;font-variation-settings:"opsz" 144}
+  .monthyear{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft)}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--amber-deep);font-weight:600;margin-bottom:12px;
+  }
+  .eyebrow .of{color:var(--ink-soft);font-weight:500}
+  .law{
+    font-family:"Fraunces";font-weight:400;font-size:clamp(24px,7vw,32px);line-height:1.3;
+    font-variation-settings:"opsz" 40;margin-bottom:4px;
+  }
+  .law .mark{color:var(--amber);font-weight:500}
+
+  .empty{text-align:center;color:var(--ink-soft)}
+  .empty .daynum{color:var(--ink)}
+  .empty .rest{font-family:"Fraunces";font-size:24px;line-height:1.35;color:var(--ink);margin:4px 0 10px}
+  .empty .sub{font-size:14px;line-height:1.5;color:var(--ink-soft)}
+  .empty .next{margin-top:16px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber-deep);font-weight:600}
+
+  .viewall{margin-top:22px;display:flex;justify-content:center}
+  .viewall button{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);font-family:"Spline Sans";
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:9px 16px;border-radius:999px;cursor:pointer;transition:.2s;
+  }
+  .viewall button:hover{border-color:var(--amber);color:var(--amber-deep)}
+
+  .dock{
+    position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, var(--desk) 60%, transparent);
+  }
+  .dock button{
+    flex:1;max-width:170px;background:var(--desk-2);border:1px solid #2b2f3b;color:#cfcabb;
+    font-family:"Spline Sans";font-weight:500;font-size:14px;padding:13px;border-radius:12px;cursor:pointer;transition:.18s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .dock button.primary{background:var(--amber);border-color:var(--amber);color:#1a1206;font-weight:600}
+  .dock button:hover{transform:translateY(-1px)}
+  .dock button:active{transform:translateY(0)}
+
+  .scrim{position:fixed;inset:0;background:rgba(8,9,13,.6);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--paper);color:var(--ink);
+    border-radius:18px 18px 0 0;max-height:86dvh;display:flex;flex-direction:column;
+    transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.7,.2,1);padding-bottom:env(safe-area-inset-bottom);
+  }
+  .sheet.open{transform:translateY(0)}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+  .sheet-head h2{font-family:"Fraunces";font-weight:500;font-size:21px}
+  .sheet-head .x{background:none;border:none;font-size:24px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:4px}
+  .sheet-body{overflow-y:auto;padding:14px 20px 24px}
+
+  label{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 7px}
+  textarea{
+    width:100%;font-family:"Fraunces";font-size:18px;color:var(--ink);background:#fffdf8;
+    border:1px solid var(--line);border-radius:10px;padding:13px 14px;margin-bottom:16px;resize:vertical;
+  }
+  textarea:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
+  .save{width:100%;background:var(--ink);color:var(--paper);border:none;font-family:"Spline Sans";font-weight:600;font-size:15px;padding:14px;border-radius:11px;cursor:pointer}
+  .save:hover{background:#000}
+
+  .count{font-size:12px;color:var(--ink-soft);letter-spacing:.1em;text-transform:uppercase;margin:4px 0 12px}
+  .item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:none}
+  .item .no{font-family:"Fraunces";font-weight:600;font-size:15px;color:var(--amber-deep);min-width:26px;padding-top:1px}
+  .item.is-today{background:#fffaf0;border-radius:10px;padding:12px;margin:0 -12px}
+  .item .body{flex:1;min-width:0}
+  .item .t{font-family:"Fraunces";font-size:17px;line-height:1.4}
+  .item .acts{display:flex;flex-direction:column;gap:6px}
+  .item .acts button{background:none;border:1px solid var(--line);border-radius:8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:5px 8px;cursor:pointer;transition:.15s}
+  .item .acts .del:hover{border-color:var(--danger);color:var(--danger)}
+  .item .acts .edit:hover{border-color:var(--amber);color:var(--amber-deep)}
+
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+  <div class="masthead">Leaf · <b>one law a weekday</b></div>
+  <div class="subhead">Paraphrased from The 48 Laws of Power</div>
+
+  <main class="stage">
+    <section class="page" id="page" aria-live="polite"></section>
+  </main>
+
+  <nav class="dock">
+    <button id="btn-all">✦ All 48</button>
+    <button id="btn-add" class="primary">＋ Add your own</button>
+  </nav>
+
+  <div class="scrim" id="scrim-add"></div>
+  <div class="sheet" id="sheet-add" role="dialog" aria-modal="true" aria-label="Add a law or quote">
+    <div class="sheet-head">
+      <h2 id="add-title">Add your own</h2>
+      <button class="x" data-close="add" aria-label="Close">×</button>
+    </div>
+    <div class="sheet-body">
+      <label for="q-text">It joins the end of the rotation</label>
+      <textarea id="q-text" rows="4" placeholder="Your own law or line…"></textarea>
+      <button class="save" id="q-save">Add to rotation</button>
+    </div>
+  </div>
+
+  <div class="scrim" id="scrim-lib"></div>
+  <div class="sheet" id="sheet-lib" role="dialog" aria-modal="true" aria-label="All laws">
+    <div class="sheet-head">
+      <h2>The rotation</h2>
+      <button class="x" data-close="lib" aria-label="Close">×</button>
+    </div>
+    <div class="sheet-body" id="lib-body"></div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var KEY="leaf:laws:v1";
+  var mem=null;
+  var hasStore=(typeof window.storage!=="undefined" && window.storage);
+
+  async function load(){
+    if(hasStore){ try{ var r=await window.storage.get(KEY); return r&&r.value?JSON.parse(r.value):null; }catch(e){ return null; } }
+    return mem;
+  }
+  async function save(list){
+    mem=list;
+    if(hasStore){ try{ await window.storage.set(KEY, JSON.stringify(list)); }catch(e){} }
+  }
+
+  var LAWS=[
+    "Never outshine the boss",
+    "Don't over-trust friends; learn to use your enemies",
+    "Keep your true intentions hidden",
+    "Always say less than necessary",
+    "Guard your reputation with your life",
+    "Court attention at all costs",
+    "Let others do the work, but take the credit",
+    "Make people come to you",
+    "Win through actions, never through argument",
+    "Avoid the unhappy and the unlucky",
+    "Keep people dependent on you",
+    "Disarm others with selective honesty and generosity",
+    "Appeal to people's self-interest, never to their mercy",
+    "Pose as a friend, work as a spy",
+    "Crush your enemy completely",
+    "Use absence to increase respect and honor",
+    "Keep others in suspense by staying unpredictable",
+    "Don't isolate yourself behind walls",
+    "Know who you're dealing with; don't offend the wrong person",
+    "Don't commit to anyone",
+    "Play dumb to catch the clever off guard",
+    "Use surrender as a tool of power",
+    "Concentrate your forces",
+    "Master the role of the perfect courtier",
+    "Recreate yourself; don't accept the role handed to you",
+    "Keep your hands clean",
+    "Feed people's need to believe to build a following",
+    "Act boldly when you make your move",
+    "Plan all the way to the end",
+    "Make your achievements seem effortless",
+    "Control the options; get others playing your cards",
+    "Feed people's fantasies",
+    "Find each person's weak spot",
+    "Carry yourself like royalty to be treated that way",
+    "Master the art of timing",
+    "Ignore what you can't have; disdain is the best revenge",
+    "Stage compelling spectacles",
+    "Think as you like, but act like everyone else",
+    "Stir the waters to catch the fish",
+    "Despise the free lunch",
+    "Don't follow in a great predecessor's footsteps",
+    "Strike the shepherd and the sheep scatter",
+    "Win hearts and minds",
+    "Disarm and infuriate with the mirror effect",
+    "Preach change, but never reform too much at once",
+    "Never appear too perfect",
+    "Don't push a victory too far; know when to stop",
+    "Be formless and adaptable"
+  ];
+
+  var laws=[];      // [{id,text}]
+  var editingId=null;
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function esc(s){ return s.replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+
+  /* ---- weekday-sequential index (skips weekends, loops at length) ---- */
+  var ANCHOR=Math.floor(Date.UTC(2024,0,1)/86400000); // a Monday
+  function dayNum(d){ return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000); }
+  function dow(d){ var diff=dayNum(d)-ANCHOR; return ((diff%7)+7)%7; } // 0=Mon … 5=Sat 6=Sun
+  function isWeekend(d){ return dow(d)>4; }
+  function weekdayCount(d){ var diff=dayNum(d)-ANCHOR; var w=Math.floor(diff/7); return w*5 + dow(d); }
+  function lawIndex(d){ var n=laws.length||1; return ((weekdayCount(d)%n)+n)%n; }
+  function nextWeekday(d){ var t=new Date(d.getFullYear(),d.getMonth(),d.getDate()); do{ t.setDate(t.getDate()+1); }while(isWeekend(t)); return t; }
+
+  var page=document.getElementById("page");
+
+  function fmtParts(d){
+    var wd=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()];
+    var mo=["January","February","March","April","May","June","July","August","September","October","November","December"][d.getMonth()];
+    return {weekday:wd,day:d.getDate(),month:mo,year:d.getFullYear()};
+  }
+
+  function renderDay(){
+    var d=new Date();
+    var p=fmtParts(d);
+    var dateBlock=
+      '<div class="datecard">'+
+        '<div class="weekday">'+p.weekday+'</div>'+
+        '<div class="daynum">'+p.day+'</div>'+
+        '<div class="monthyear">'+p.month+' '+p.year+'</div>'+
+      '</div>';
+
+    if(isWeekend(d)){
+      var nd=nextWeekday(d);
+      var nNum=lawIndex(nd)+1;
+      page.innerHTML=
+        '<div class="empty">'+dateBlock+
+          '<div class="rest">Nothing to learn today.</div>'+
+          '<div class="sub">Rest up. The next law lands Monday.</div>'+
+          '<div class="next">Up next · Law '+nNum+'</div>'+
+        '</div>';
+      return;
+    }
+
+    var idx=lawIndex(d);
+    var law=laws[idx];
+    page.innerHTML=
+      dateBlock+
+      '<div class="eyebrow">Law '+(idx+1)+' <span class="of">of '+laws.length+'</span></div>'+
+      '<div class="law"><span class="mark">“</span>'+esc(law.text)+'<span class="mark">”</span></div>'+
+      '<div class="viewall"><button id="all-btn">View all '+laws.length+'</button></div>';
+    var ab=document.getElementById("all-btn");
+    if(ab) ab.addEventListener("click", function(){ renderLibrary(); openSheet("lib"); });
+  }
+
+  function openSheet(w){ document.getElementById("scrim-"+w).classList.add("open"); document.getElementById("sheet-"+w).classList.add("open"); }
+  function closeSheet(w){ document.getElementById("scrim-"+w).classList.remove("open"); document.getElementById("sheet-"+w).classList.remove("open"); }
+
+  function renderLibrary(){
+    var body=document.getElementById("lib-body");
+    var todayIdx = isWeekend(new Date()) ? -1 : lawIndex(new Date());
+    var html='<div class="count">'+laws.length+' in rotation · one per weekday, then back to 1</div>';
+    laws.forEach(function(q,i){
+      html+=
+        '<div class="item'+(i===todayIdx?' is-today':'')+'" data-id="'+q.id+'">'+
+          '<div class="no">'+(i+1)+'</div>'+
+          '<div class="body"><div class="t">'+esc(q.text)+'</div></div>'+
+          '<div class="acts">'+
+            '<button class="edit" data-id="'+q.id+'">Edit</button>'+
+            '<button class="del" data-id="'+q.id+'">Delete</button>'+
+          '</div>'+
+        '</div>';
+    });
+    body.innerHTML=html;
+  }
+
+  var tEl=document.getElementById("q-text");
+  function openAdd(q){
+    editingId=q?q.id:null;
+    document.getElementById("add-title").textContent=q?"Edit":"Add your own";
+    document.getElementById("q-save").textContent=q?"Save changes":"Add to rotation";
+    tEl.value=q?q.text:"";
+    openSheet("add");
+    setTimeout(function(){ tEl.focus(); },180);
+  }
+
+  document.getElementById("q-save").addEventListener("click", async function(){
+    var text=tEl.value.trim(); if(!text){ tEl.focus(); return; }
+    if(editingId){ laws=laws.map(function(q){ return q.id===editingId?{id:q.id,text:text}:q; }); }
+    else{ laws.push({id:uid(),text:text}); }
+    await save(laws); closeSheet("add"); renderDay(); renderLibrary();
+  });
+
+  document.getElementById("lib-body").addEventListener("click", async function(e){
+    var id=e.target.getAttribute("data-id"); if(!id) return;
+    if(e.target.classList.contains("del")){
+      laws=laws.filter(function(q){return q.id!==id;});
+      await save(laws); renderLibrary(); renderDay();
+    }else if(e.target.classList.contains("edit")){
+      var q=laws.find(function(x){return x.id===id;});
+      if(q){ closeSheet("lib"); setTimeout(function(){ openAdd(q); },200); }
+    }
+  });
+
+  document.getElementById("btn-add").addEventListener("click", function(){ openAdd(null); });
+  document.getElementById("btn-all").addEventListener("click", function(){ renderLibrary(); openSheet("lib"); });
+  document.querySelectorAll("[data-close]").forEach(function(b){ b.addEventListener("click", function(){ closeSheet(b.getAttribute("data-close")); }); });
+  document.getElementById("scrim-add").addEventListener("click", function(){ closeSheet("add"); });
+  document.getElementById("scrim-lib").addEventListener("click", function(){ closeSheet("lib"); });
+
+  (async function(){
+    var stored=await load();
+    if(stored && Array.isArray(stored) && stored.length){ laws=stored; }
+    else{ laws=LAWS.map(function(t){ return {id:uid(),text:t}; }); await save(laws); }
+    renderDay();
+  })();
+})();
+</script>
+</body>
+</html>
